@@ -1,6 +1,8 @@
 class DropBoxController{
-
+    
     constructor(){
+        this.onselectionchange = new Event('selectionchange');
+        
         this.btnSendFileEl = document.querySelector('#btn-send-file')
         this.inputFileEl = document.querySelector('#files')
         this.snackModalEl = document.querySelector('#react-snackbar-root')
@@ -27,6 +29,11 @@ class DropBoxController{
         firebase.initializeApp(firebaseConfig);
     }
     initEvents(){
+
+        this.listFilesEL.addEventListener('selectionchange', e=>{
+           console.log(e) 
+        });
+
         this.btnSendFileEl.addEventListener('click', e => {
           this.inputFileEl.click();
         });
@@ -295,7 +302,49 @@ class DropBoxController{
                 ${this.getFileIconView(file)}
                 <div class="name text-center">${file.name}</div>
         `;
+
+        this.initEventsLi(li);
         return li;
+    }
+
+    initEventsLi(li){
+        li.addEventListener('click', e=> {
+
+
+            this.listFilesEL.dispatchEvent(this.onselectionchange)
+
+            if(e.shiftKey){
+                let firstLi = this.listFilesEL.querySelector('li.selected');
+                if(firstLi){
+                    let indexStart;
+                    let endStart;
+                    let lis = li.parentElement.childNodes;
+                    lis.forEach((el, index)=>{
+                        if(firstLi === el){indexStart = index;}
+                        
+                        if(li === el ){endStart = index;}
+                    });
+                    let index = [indexStart, endStart].sort()
+                    console.log(index)
+
+                    lis.forEach((el, i)=>{
+                        if(i >= index[0] && i <= index[1]){
+                            el.classList.add('selected');
+                        }
+                    });
+
+                    return true;
+
+                }
+            }
+
+            if(!e.ctrlKey){
+                this.listFilesEL.querySelectorAll('li.selected').forEach(el =>{
+                    el.classList.remove('selected');
+                });
+            }
+            li.classList.toggle('selected');
+        });
     }
 
     readFiles(){
