@@ -8,8 +8,12 @@ class DropBoxController{
         this.snackModalEl = document.querySelector('#react-snackbar-root')
         this.progressBarEl = document.querySelector('.mc-progress-bar-fg')
         this.nameFileEl = document.querySelector('.filename')
-        this.timeleftEl = document.querySelector('.timeleft')
+        this.timeLeftEl = document.querySelector('.timeleft')
         this.listFilesEL = document.querySelector('#list-of-files-and-directories')
+
+        this.btnNewFolderEL = document.querySelector('#btn-new-folder')
+        this.btnRenameEL = document.querySelector('#btn-rename')
+        this.btnDeleteEL = document.querySelector('#btn-delete')
 
         this.connectFirebase();
         this.initEvents();
@@ -28,10 +32,29 @@ class DropBoxController{
           };
         firebase.initializeApp(firebaseConfig);
     }
+
+    getSelection(){
+        return this.listFilesEL.querySelectorAll('.selected');
+    }
+
     initEvents(){
 
         this.listFilesEL.addEventListener('selectionchange', e=>{
-           console.log(e) 
+           
+            switch (this.getSelection().length) {
+                case 0:
+                    this.btnDeleteEL.style.display = 'none';
+                    this.btnRenameEL.style.display = 'none';
+                    break;
+                case 1:
+                    this.btnDeleteEL.style.display = 'block';
+                    this.btnRenameEL.style.display = 'block';    
+                    break;
+                default:
+                    this.btnDeleteEL.style.display = 'block';
+                    this.btnRenameEL.style.display = 'none'; 
+                    break;
+            }
         });
 
         this.btnSendFileEl.addEventListener('click', e => {
@@ -116,7 +139,7 @@ class DropBoxController{
         
         this.progressBarEl.style.width = `${porcent}%`
         this.nameFileEl.innerHTML = file.name;
-        this.timeleftEl.innerHTML = this.formatTimeToHuman(timeleft);
+        this.timeLeftEl.innerHTML = this.formatTimeToHuman(timeleft);
     }
 
     formatTimeToHuman(duration){
@@ -311,8 +334,7 @@ class DropBoxController{
         li.addEventListener('click', e=> {
 
 
-            this.listFilesEL.dispatchEvent(this.onselectionchange)
-
+            
             if(e.shiftKey){
                 let firstLi = this.listFilesEL.querySelector('li.selected');
                 if(firstLi){
@@ -326,27 +348,29 @@ class DropBoxController{
                     });
                     let index = [indexStart, endStart].sort()
                     console.log(index)
-
+                    
                     lis.forEach((el, i)=>{
                         if(i >= index[0] && i <= index[1]){
                             el.classList.add('selected');
                         }
                     });
-
+                    this.listFilesEL.dispatchEvent(this.onselectionchange)
+                    
                     return true;
-
+                    
                 }
             }
-
+            
             if(!e.ctrlKey){
                 this.listFilesEL.querySelectorAll('li.selected').forEach(el =>{
                     el.classList.remove('selected');
                 });
             }
             li.classList.toggle('selected');
+            this.listFilesEL.dispatchEvent(this.onselectionchange)
         });
     }
-
+    
     readFiles(){
         this.getFirebaseRef().on('value', snapshot => {
             this.listFilesEL.innerHTML = '';
